@@ -1,7 +1,9 @@
 package com.byted.camp.todolist;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -11,10 +13,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.byted.camp.todolist.beans.State;
+import com.byted.camp.todolist.db.TodoDbHelper;
+
 public class NoteActivity extends AppCompatActivity {
 
     private EditText editText;
     private Button addBtn;
+    private SQLiteDatabase database;
+    private TodoDbHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,14 +32,18 @@ public class NoteActivity extends AppCompatActivity {
         editText = findViewById(R.id.edit_text);
         editText.setFocusable(true);
         editText.requestFocus();
+
+        this.dbHelper = new TodoDbHelper(this);
+        this.database = this.dbHelper.getWritableDatabase();
+
         InputMethodManager inputManager = (InputMethodManager)
                 getSystemService(Context.INPUT_METHOD_SERVICE);
         if (inputManager != null) {
             inputManager.showSoftInput(editText, 0);
         }
 
-        addBtn = findViewById(R.id.btn_add);
 
+        addBtn = findViewById(R.id.btn_add);
         addBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -58,11 +69,30 @@ public class NoteActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
+        this.database.close();
+        this.database = null;
+        this.dbHelper.close();
+        this.dbHelper = null;
     }
 
-    private boolean saveNote2Database(String content) {
+    private boolean saveNote2Database(String paramString) {
         // TODO 插入一条新数据，返回是否插入成功
-        return false;
+        boolean bool = false;
+        if (this.database != null) {
+            if (TextUtils.isEmpty(paramString)) {
+                return false;
+            }
+            ContentValues values = new ContentValues();
+            values.put("content", paramString);
+            values.put("state", State.TODO.intValue);
+            values.put("date", System.currentTimeMillis());
+            if (this.database.insert("note", null, values) != -1L) {
+                bool = true;
+            }
+            return bool;
+        }
+        return bool;
     }
 }

@@ -1,7 +1,10 @@
 package com.byted.camp.todolist;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -15,15 +18,22 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.byted.camp.todolist.beans.Note;
+import com.byted.camp.todolist.beans.State;
+import com.byted.camp.todolist.db.TodoDbHelper;
 import com.byted.camp.todolist.debug.DebugActivity;
 import com.byted.camp.todolist.ui.NoteListAdapter;
 
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Date;
+
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_ADD = 1002;
-
+    private SQLiteDatabase database;
+    private TodoDbHelper dbHelper;
     private RecyclerView recyclerView;
     private NoteListAdapter notesAdapter;
 
@@ -44,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        this.dbHelper = new TodoDbHelper(this);
+        this.database = this.dbHelper.getWritableDatabase();
+
         recyclerView = findViewById(R.id.list_todo);
         recyclerView.setLayoutManager(new LinearLayoutManager(this,
                 LinearLayoutManager.VERTICAL, false));
@@ -60,14 +73,18 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.updateNode(note);
             }
         });
-        recyclerView.setAdapter(notesAdapter);
 
+        recyclerView.setAdapter(notesAdapter);
         notesAdapter.refresh(loadNotesFromDatabase());
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        this.database.close();
+        this.database = null;
+        this.dbHelper.close();
+        this.dbHelper = null;
     }
 
     @Override
@@ -103,15 +120,54 @@ public class MainActivity extends AppCompatActivity {
 
     private List<Note> loadNotesFromDatabase() {
         // TODO 从数据库中查询数据，并转换成 JavaBeans
-        return null;
+        if (this.database == null) {
+            return Collections.emptyList();
+        }
+        List<Note> result = new LinkedList<>();
+        Cursor cursor = null;
+        try {
+            cursor = this.database.query("note", null, null, null, null, null, "date DESC");
+            while (cursor.moveToNext()) {
+                long note_id = cursor.getLong(cursor.getColumnIndex("_id"));
+                String textContent = cursor.getString(cursor.getColumnIndex("content"));
+                long date = cursor.getLong(cursor.getColumnIndex("date"));
+                int state = cursor.getInt(cursor.getColumnIndex("state"));
+
+                Note localNote = new Note(note_id);
+                localNote.setContent(textContent);
+                localNote.setDate(new Date(date));
+                localNote.setState(State.from(state));
+
+                result.add(localNote);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return result;
     }
 
     private void deleteNote(Note note) {
         // TODO 删除数据
+        if (this.database == null) {
+            return;
+        }
+        if (this.database.delete("note", "_id=?", new String[]{String.valueOf(note.id)}) > 0) {
+            this.notesAdapter.refresh(loadNotesFromDatabase());
+        }
     }
 
     private void updateNode(Note note) {
         // 更新数据
+        if (this.database == null) {
+            return;
+        }
+        ContentValues localContentValues = new ContentValues();
+        localContentValues.put("state", note.getState().intValue);
+        if (this.database.update("note", localContentValues, "_id=?", new String[]{String.valueOf(note.id)}) > 0) {
+            this.notesAdapter.refresh(loadNotesFromDatabase());
+        }
     }
 
 }

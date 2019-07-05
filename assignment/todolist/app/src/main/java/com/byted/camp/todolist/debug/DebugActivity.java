@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,7 +15,12 @@ import android.widget.Toast;
 
 import com.byted.camp.todolist.R;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -65,7 +71,43 @@ public class DebugActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // TODO 把一段文本写入某个存储区的文件中，再读出来，显示在 fileText 上
-                fileText.setText("TODO");
+                File dir = getFilesDir();
+                Log.e("XJP", "onClick: " + dir.toString() + "/16231219.txt");
+                File destFile = new File(dir.toString() + "/16231219.txt");
+
+                FileWriter fileWriter;
+                FileReader fileReader;
+                BufferedWriter bufferedWriter = null;
+                BufferedReader bufferedReader = null;
+                try {
+                    fileWriter = new FileWriter(destFile);
+                    fileReader = new FileReader(destFile);
+                    bufferedWriter = new BufferedWriter(fileWriter);
+                    bufferedReader = new BufferedReader(fileReader);
+                    String line = "16231219 许骏鹏";
+                    bufferedWriter.write(line);
+                    Log.e("XJP", "onClick: " + dir.toString() + "/ write success");
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        if (bufferedWriter != null) {
+                            bufferedWriter.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                try {
+                    fileText.setText(bufferedReader.readLine());
+                    Log.e("XJP", "onClick: " + dir.toString() + "/ read success");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
