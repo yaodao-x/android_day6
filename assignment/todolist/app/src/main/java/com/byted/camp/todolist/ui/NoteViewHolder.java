@@ -71,5 +71,8 @@ public class NoteViewHolder extends RecyclerView.ViewHolder {
             contentText.setTextColor(Color.BLACK);
             contentText.setPaintFlags(contentText.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
         }
+
+        //TODO: Priority
+        itemView.setBackgroundColor(note.getPriority().color);
     }
 }

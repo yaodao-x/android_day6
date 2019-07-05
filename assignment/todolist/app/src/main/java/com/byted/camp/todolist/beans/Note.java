@@ -9,36 +9,54 @@ import java.util.Date;
  */
 public class Note {
 
-    public final long id;
-    private Date date;
-    private State state;
     private String content;
+    private Date date;
+    public final long id;
+    private Priority priority;
+    private State state;
 
-    public Note(long id) {
-        this.id = id;
+    public Note(long paramLong)
+    {
+        this.id = paramLong;
     }
 
-    public Date getDate() {
-        return date;
+    public String getContent()
+    {
+        return this.content;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public Date getDate()
+    {
+        return this.date;
     }
 
-    public State getState() {
-        return state;
+    public Priority getPriority()
+    {
+        return this.priority;
     }
 
-    public void setState(State state) {
-        this.state = state;
+    public State getState()
+    {
+        return this.state;
     }
 
-    public String getContent() {
-        return content;
+    public void setContent(String paramString)
+    {
+        this.content = paramString;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setDate(Date paramDate)
+    {
+        this.date = paramDate;
+    }
+
+    public void setPriority(Priority paramPriority)
+    {
+        this.priority = paramPriority;
+    }
+
+    public void setState(State paramState)
+    {
+        this.state = paramState;
     }
 }

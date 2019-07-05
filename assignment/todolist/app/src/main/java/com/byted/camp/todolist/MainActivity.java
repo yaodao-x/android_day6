@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.byted.camp.todolist.beans.Note;
+import com.byted.camp.todolist.beans.Priority;
 import com.byted.camp.todolist.beans.State;
 import com.byted.camp.todolist.db.TodoDbHelper;
 import com.byted.camp.todolist.debug.DebugActivity;
@@ -49,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 startActivityForResult(
-                        new Intent(MainActivity.this, NoteActivity.class),
-                        REQUEST_CODE_ADD);
+                        new Intent(MainActivity.this, NoteActivity.class), REQUEST_CODE_ADD);
             }
         });
 
@@ -126,17 +126,20 @@ public class MainActivity extends AppCompatActivity {
         List<Note> result = new LinkedList<>();
         Cursor cursor = null;
         try {
-            cursor = this.database.query("note", null, null, null, null, null, "date DESC");
+            cursor = this.database.query("note", null, null, null, null, null, "priority DESC");
             while (cursor.moveToNext()) {
                 long note_id = cursor.getLong(cursor.getColumnIndex("_id"));
                 String textContent = cursor.getString(cursor.getColumnIndex("content"));
                 long date = cursor.getLong(cursor.getColumnIndex("date"));
                 int state = cursor.getInt(cursor.getColumnIndex("state"));
+                int priority = cursor.getInt(cursor.getColumnIndex("priority"));
 
                 Note localNote = new Note(note_id);
                 localNote.setContent(textContent);
                 localNote.setDate(new Date(date));
                 localNote.setState(State.from(state));
+                //TODO: priority
+                localNote.setPriority(new Priority(priority));
 
                 result.add(localNote);
             }
